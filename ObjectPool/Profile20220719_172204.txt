@@ -1,0 +1,5 @@
+                Name |           Average |               Min |               Max |            Call
+     MeomoryPool_New |          0.0379us |          0.0000us |        389.1000us |         9999999
+  MeomoryPool_Delete |          0.0363us |          0.0000us |        249.1000us |         9999999
+                 New |          0.1201us |          0.0000us |        356.2000us |         9999999
+              Delete |          0.5914us |          0.3000us |       1940.6000us |         9999999
