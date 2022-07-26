@@ -11,15 +11,16 @@ class MemoryPool
 private:
 	struct BLOCK_NODE
 	{
-		MemoryPool* fCode;
+		unsigned __int64 fCode;
 		DATA data;
-		MemoryPool* bCode;
+		unsigned __int64 bCode;
 		BLOCK_NODE* next;
 	};
 	int _capacity; // 할당된 오브젝트 개수
 	int _useCount = 0; // 사용중인 오브젝트 개수
 	bool _placementFlag; // 생성자 호출 여부
 	BLOCK_NODE* _pTop = nullptr;
+	UUID _uuid;
 
 public:
 	//////////////////////////////////////////////////////////////////////////
@@ -31,14 +32,18 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	MemoryPool(int blockNum = 0, bool placementNew = false) : _capacity(blockNum), _placementFlag(placementNew)
 	{
-		// 초기 생성시 생성자 호출
+		UuidCreate(&_uuid);
+
 		for (int i = 0; i < blockNum; i++)
 		{
-			BLOCK_NODE* node = new BLOCK_NODE;
-			node->fCode = this;
-			node->bCode = this;
+			BLOCK_NODE* node = (BLOCK_NODE*) malloc(sizeof(BLOCK_NODE));
+			node->fCode = (unsigned __int64) _uuid.Data4;
+			node->bCode = (unsigned __int64) _uuid.Data4;
 			node->next = _pTop;
 			_pTop = node;
+
+			if (!_placementFlag)
+				new (&node->data) DATA;
 		}
 	}
 
@@ -69,8 +74,8 @@ public:
 		{
 			// 새로 생성된 경우는 무조건 한번은 생성자 호출
 			node = new BLOCK_NODE;
-			node->fCode = this;
-			node->bCode = this;
+			node->fCode = (unsigned __int64) _uuid.Data4;
+			node->bCode = (unsigned __int64) _uuid.Data4;
 
 			_capacity++;
 			_useCount++;
@@ -96,14 +101,14 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	bool Free(DATA* pData)
 	{
-		BLOCK_NODE* node = (BLOCK_NODE*)((char*)pData - sizeof(void*));
-
-		// 내가 할당한 노드가 맞는지 체크
-		if (node->fCode != this || node->bCode != this)
-			return false;
+		BLOCK_NODE* node = (BLOCK_NODE*)((char*)pData - 8);
 
 		// 사용중인 노드가 있는지 체크
 		if (_useCount < 0)
+			return false;
+
+		// 내가 할당한 노드가 맞는지 체크
+		if (node->fCode != (unsigned __int64) _uuid.Data4 || node->bCode != (unsigned __int64) _uuid.Data4)
 			return false;
 
 		if (_placementFlag)

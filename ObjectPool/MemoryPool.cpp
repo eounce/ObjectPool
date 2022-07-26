@@ -47,7 +47,7 @@ int wmain()
 	MemoryPool<Player> playerPool(0, false);
 	int count = 0;
 
-	while (count <= 10000000)
+	while (count <= 1000000)
 	{
 		count++;
 		Player* player;
